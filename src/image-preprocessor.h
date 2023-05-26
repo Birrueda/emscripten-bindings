@@ -75,6 +75,7 @@ public:
     void load_image(int buffer, int width, int height);
     void preprocess_image();
     emscripten::val get_output_image();
+    emscripten::val get_serialized_results();
     void sendMapName(std::string mapName);
     void saveInitialCameraPose();
     void saveFinalCameraPose();
@@ -133,8 +134,8 @@ private:
     float marker_distance;
     float marker_x;
 
-    //! stores latest extracted frame
-    cv::Mat currentFrame;
+    //! stores keypoints and descriptors from the latest extracted frame 
+    cv::Mat keypointsDescriptorsMat;
     
     //! Websocket instance
     EMSCRIPTEN_WEBSOCKET_T ws;

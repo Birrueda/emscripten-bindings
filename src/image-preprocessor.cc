@@ -160,14 +160,14 @@ EM_BOOL ImagePreprocessor::process_server_message(int eventType, const Emscripte
 
     if (data[0] == COMMAND_FATAL_ERROR)
     {        
-        instance->currentFrame.release();
+        instance->keypointsDescriptorsMat.release();
         EM_ASM(
             stopCapture();
             showErrorModal();
         );
     }
     
-    instance->send_data(reinterpret_cast<float*>(instance->currentFrame.data), instance->currentFrame.total()*instance->currentFrame.channels());
+    instance->send_data(reinterpret_cast<float*>(instance->keypointsDescriptorsMat.data), instance->keypointsDescriptorsMat.total()*instance->keypointsDescriptorsMat.channels());
 
     return EM_TRUE;
 }
@@ -298,15 +298,23 @@ void ImagePreprocessor::preprocess_image() {
         return;
     }
 
-    serialize_results(descriptors_, currentFrame);
+    serialize_results(descriptors_, keypointsDescriptorsMat);
 
     // Once we've got it, send first frame
     // If we don't do this, the server will get stuck waiting for data
     if (operationMode == SERVER && sendFirstFrame)
     {
-        send_data(reinterpret_cast<float*>(currentFrame.data), currentFrame.total()*currentFrame.channels());
+        send_data(reinterpret_cast<float*>(keypointsDescriptorsMat.data), keypointsDescriptorsMat.total()*keypointsDescriptorsMat.channels());
         sendFirstFrame = false;
     }
+}
+
+emscripten::val ImagePreprocessor::get_serialized_results() {
+    if (keypointsDescriptorsMat.empty())
+        return emscripten::val(0);
+
+    // Data is already contigous because we cloned earlier
+    return emscripten::val(emscripten::typed_memory_view(keypointsDescriptorsMat.total()*keypointsDescriptorsMat.channels(), keypointsDescriptorsMat.clone().data));
 }
 
 emscripten::val ImagePreprocessor::get_output_image() {
