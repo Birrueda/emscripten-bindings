@@ -1,12 +1,13 @@
 CXX      := em++
-CXXFLAGS := -std=c++11 -Wall -Wextra -O3 -msimd128
+CXXFLAGS := -std=c++11 -Wall -Wextra -O3 -msimd128 -pthread
 
 # -sALLOW_MEMORY_GROWTH
 # USE_PTHREADS + ALLOW_MEMORY_GROWTH may run non-wasm code slowly, see https://github.com/WebAssembly/design/issues/1271
 
-LDFLAGS  := --bind -lembind -pthread -lwebsocket.js -sTOTAL_MEMORY=128MB --profiling -sNO\_FILESYSTEM=1 -flto -s"ENVIRONMENT=web,worker" -sPTHREAD_POOL_SIZE=8 
+LDFLAGS  := --bind -lembind -pthread -lwebsocket.js -sTOTAL_MEMORY=128MB --profiling -sNO\_FILESYSTEM=1 -flto -s"ENVIRONMENT=web,worker" -sPTHREAD_POOL_SIZE=8
+LDFLAGS += -sEXPORTED_FUNCTIONS="['_malloc','_free']" -sMALLOC=dlmalloc
 LDFLAGS += -L./libs/opencv/ ./libs/opencv/libopencv_features2d.a ./libs/opencv/libopencv_core.a ./libs/opencv/libopencv_imgproc.a 
-EXPORTED_FUNCTIONS = _malloc,_free
+# EXPORTED_FUNCTIONS = _malloc,_free
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/wasm
@@ -28,7 +29,7 @@ $(OBJ_DIR)/%.o: %.cc
 
 $(APP_DIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -s EXPORTED_FUNCTIONS=$(EXPORTED_FUNCTIONS) -o $(APP_DIR)/$(TARGET) $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $(APP_DIR)/$(TARGET) $^ $(LDFLAGS)
 
 -include $(DEPENDENCIES)
 

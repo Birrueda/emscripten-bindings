@@ -17,7 +17,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
     .constructor(&build_server_with_params, allow_raw_pointers())
 
     .function("preprocess_image", &ImagePreprocessor::preprocess_image)
-    .function("get_serialized_results", &ImagePreprocessor::get_output_image)
+    .function("get_serialized_results", &ImagePreprocessor::get_serialized_results)
     .function("get_output_image", &ImagePreprocessor::get_output_image)
     .function("load_image", &ImagePreprocessor::load_image)
     .function("set_server_message_callback", &ImagePreprocessor::set_server_message_callback)

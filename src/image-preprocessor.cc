@@ -313,8 +313,12 @@ emscripten::val ImagePreprocessor::get_serialized_results() {
     if (keypointsDescriptorsMat.empty())
         return emscripten::val(0);
 
+    cv::Mat clone = keypointsDescriptorsMat.clone();
+
     // Data is already contigous because we cloned earlier
-    return emscripten::val(emscripten::typed_memory_view(keypointsDescriptorsMat.total()*keypointsDescriptorsMat.channels(), keypointsDescriptorsMat.clone().data));
+    return emscripten::val(
+        emscripten::typed_memory_view(clone.total()*clone.elemSize(), clone.data)
+    );
 }
 
 emscripten::val ImagePreprocessor::get_output_image() {
