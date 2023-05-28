@@ -313,11 +313,10 @@ emscripten::val ImagePreprocessor::get_serialized_results() {
     if (keypointsDescriptorsMat.empty())
         return emscripten::val(0);
 
-    cv::Mat clone = keypointsDescriptorsMat.clone();
-
-    // Data is already contigous because we cloned earlier
+    // Note: to avoid deallocation issues, we should return the keypointsDescriptorsMat property, as we are sure it won't get deallocated
+    // because it's part of the ImagePreprocessor class.
     return emscripten::val(
-        emscripten::typed_memory_view(clone.total()*clone.elemSize(), clone.data)
+        emscripten::typed_memory_view(keypointsDescriptorsMat.total()*keypointsDescriptorsMat.elemSize(), keypointsDescriptorsMat.data)
     );
 }
 
@@ -384,7 +383,7 @@ std::string ImagePreprocessor::get_direction_text() {
     }
 }
 
-void ImagePreprocessor::serialize_results(const cv::_InputArray& in_descriptors, const cv::_OutputArray& cFrame) {
+void ImagePreprocessor::serialize_results(const cv::_InputArray& in_descriptors, const cv::_OutputArray& keyDescMat) {
     std::vector<float> keypoints = serializeKeypoints();
 
     unsigned int howManyFeatures = in_descriptors.rows();
@@ -401,14 +400,15 @@ void ImagePreprocessor::serialize_results(const cv::_InputArray& in_descriptors,
         extraInfo.convertTo(extraInfo, CV_32F);
         extraInfo.at<float>(0,0) = COMMAND_PROCESS_DEBUG_FRAME;
         extraInfo.at<float>(0,1) = frameCount;   
-        cv::hconcat(extraInfo, temp, cFrame);
+        // Concat temp with extraInfo, adding two new columns at the start
+        cv::hconcat(extraInfo, temp, keyDescMat);
     }
     else 
     {
         cv::Mat extraInfo(temp.rows, 1, 0);
         extraInfo.convertTo(extraInfo, CV_32F);
         extraInfo.at<float>(0,0) = COMMAND_PROCESS_FRAME;        
-        cv::hconcat(extraInfo, temp, cFrame); 
+        cv::hconcat(extraInfo, temp, keyDescMat); 
     }
 
     frameCount += 1;
